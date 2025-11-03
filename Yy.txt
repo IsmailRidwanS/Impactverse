@@ -1,0 +1,169 @@
+💻 LEX + YACC PROGRAM SETUP & EXECUTION (UBUNTU FULL GUIDE)
+🧩 STEP 1 — INSTALL REQUIRED TOOLS
+
+Open your Terminal and type:
+
+sudo apt update
+sudo apt install flex bison gcc -y
+
+✅ To verify installation:
+flex --version
+bison --version
+gcc --version
+
+
+If all three show version numbers → tools are correctly installed.
+
+🧩 STEP 2 — CREATE A PROJECT FOLDER
+
+You can place your files anywhere, for example inside your home directory:
+
+mkdir ~/LexYaccDemo
+cd ~/LexYaccDemo
+
+
+This will be your working folder.
+
+🧩 STEP 3 — CREATE THE SOURCE FILES
+
+You’ll need three files:
+
+lexer.l – Lex file
+
+parser.y – Yacc file
+
+test.c (optional) – for input redirection test
+
+① Create parser.y
+nano parser.y
+
+
+Paste this content:
+
+%{
+#include <stdio.h>
+#include <stdlib.h>
+int yylex(void);
+void yyerror(const char *s);
+%}
+
+%token NUMBER
+
+%%
+expr:
+    expr '+' expr   { printf("= %d\n", $1 + $3); }
+  | expr '-' expr   { printf("= %d\n", $1 - $3); }
+  | expr '*' expr   { printf("= %d\n", $1 * $3); }
+  | expr '/' expr   { printf("= %d\n", $1 / $3); }
+  | NUMBER
+  ;
+%%
+
+void yyerror(const char *s) { fprintf(stderr, "%s\n", s); }
+
+int main() {
+    printf("Enter expressions (Ctrl+D to end):\n");
+    yyparse();
+    return 0;
+}
+
+
+Then save:
+Press Ctrl+O, Enter, then Ctrl+X.
+
+② Create lexer.l
+nano lexer.l
+
+
+Paste this:
+
+%{
+#include "parser.tab.h"
+%}
+
+%%
+[0-9]+      { yylval = atoi(yytext); return NUMBER; }
+[+\-*/]     { return *yytext; }
+\n          { return 0; }
+[ \t]       ;
+.           { return yytext[0]; }
+%%
+
+
+Save with Ctrl+O, Enter, Ctrl+X.
+
+③ (Optional) Create test.c — sample input
+echo "5+3" > test.c
+
+🧩 STEP 4 — GENERATE THE FILES (LEX & YACC)
+
+Now run:
+
+bison -d parser.y
+flex lexer.l
+
+
+✅ After this, your folder will contain:
+
+parser.y
+parser.tab.c
+parser.tab.h
+lexer.l
+lex.yy.c
+
+🧩 STEP 5 — COMPILE EVERYTHING
+
+Use GCC to compile:
+
+gcc lex.yy.c parser.tab.c -o calc
+
+
+✅ This creates an executable file named:
+
+calc
+
+🧩 STEP 6 — EXECUTE THE PROGRAM
+➤ Option 1: Run interactively
+./calc
+
+
+Example session:
+
+Enter expressions (Ctrl+D to end):
+5+7
+= 12
+8-3
+= 5
+Ctrl+D
+
+➤ Option 2: Run with an input file
+./calc < test.c
+
+
+Output:
+
+= 8
+
+🧩 STEP 7 — CLEANUP (optional)
+
+If you want to recompile later, you can remove generated files with:
+
+rm lex.yy.c parser.tab.c parser.tab.h calc
+
+
+Then repeat steps 4–6.
+
+✅ Final Folder Structure
+
+~/LexYaccDemo/
+│
+├── lexer.l
+├── parser.y
+├── test.c
+├── lex.yy.c
+├── parser.tab.c
+├── parser.tab.h
+└── calc
+
+
+That’s the entire working procedure from installation → execution for Ubuntu.
